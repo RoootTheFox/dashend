@@ -2,13 +2,18 @@ use rocket::http::{ContentType, Status};
 use rocket::response::Responder;
 use rocket::{response, Request, Response};
 use serde::{Deserialize, Serialize};
+use uuid::Uuid;
 use std::io::Cursor;
 use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum GenericError {
-    //#[error("invalid authentication")]
-    //InvalidAuthenticationError,
+    #[error("challenge already requested, try again later")]
+    AuthChallengeAlreadyRequested,
+
+    #[error("invalid authentication")]
+    InvalidAuthenticationError,
+
     #[error("io error")]
     IOError(#[from] std::io::Error),
 
@@ -23,6 +28,9 @@ pub enum GenericError {
 
     #[error("rocket error")]
     RocketError(#[from] rocket::Error),
+
+    #[error("invalid uuid")]
+    UuidError(#[from] uuid::Error)
 }
 
 #[derive(Serialize, Deserialize)]
@@ -70,7 +78,8 @@ impl GenericError {
 impl<'r, 'o: 'r> Responder<'r, 'o> for GenericError {
     fn respond_to(self, req: &'r Request<'_>) -> response::Result<'o> {
         match self {
-            //GenericError::InvalidAuthenticationError => self.make_response(Status::InternalServerError),
+            GenericError::InvalidAuthenticationError => self.make_response(Status::InternalServerError),
+            GenericError::UuidError(..) => self.make_response_msg(Status::BadRequest, "invalid uuid".to_string()),
             GenericError::IOError(..) => self.make_response(Status::InternalServerError),
             GenericError::MissingEnvVarError(..) => self.make_response(Status::InternalServerError),
             GenericError::GetMysqlErr(ref e) => match e {
@@ -101,4 +110,11 @@ pub struct Profile {
     pub(crate) social_tumblr: Option<String>,
     pub(crate) social_myspace: Option<String>,
     pub(crate) social_facebook: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Clone)]
+pub struct Challenge {
+    pub(crate) bot_account_id: u32,
+    pub(crate) challenge: String,
+    pub(crate) id: Uuid,
 }

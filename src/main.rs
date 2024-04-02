@@ -7,16 +7,23 @@ extern crate core;
 #[macro_use]
 extern crate rocket;
 
+use dashmap::DashMap;
 use rocket_db_pools::Database;
+use structs::Challenge;
 
 use crate::structs::GenericError;
 use rocket::fairing::AdHoc;
 use rocket::{Build, Config, Rocket};
 use std::net::Ipv4Addr;
+use std::sync::Arc;
 
 #[derive(Database)]
 #[database("sqlx")]
 struct Db(sqlx::SqlitePool);
+
+struct AuthStuff {
+    pending_challenges: Arc<DashMap<i64, Challenge>>,
+}
 
 async fn run_migrations(rocket: Rocket<Build>) -> rocket::fairing::Result {
     if let Some(db) = Db::fetch(&rocket) {
@@ -54,7 +61,13 @@ async fn main() -> Result<(), GenericError> {
     let _rocket = rocket::build()
         .attach(Db::init())
         .attach(AdHoc::try_on_ignite("DB Migrations", run_migrations))
-        .mount("/", routes![api::profile::get_profile])
+        .manage(AuthStuff {
+            pending_challenges: DashMap::new().into(),
+        })
+        .mount(
+            "/",
+            routes![api::profile::get_profile, api::auth::request_challenge, api::auth::challenge_complete],
+        )
         .configure(figment)
         .launch()
         .await?;
