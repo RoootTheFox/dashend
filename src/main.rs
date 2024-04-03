@@ -118,15 +118,14 @@ async fn main() -> Result<(), GenericError> {
                     message_deletion_string += &m.id;
                 });
 
-                if messages.len() > 1 {
-                    println!("msg del str {}", message_deletion_string);
+                if messages.len() > 0 {
                     // clean up!
-                    let mut balls = params.clone();
-                    balls.insert("messages", &message_deletion_string);
+                    let mut deletion_params = params.clone();
+                    deletion_params.insert("messages", &message_deletion_string);
 
                     let response = client
                         .post("https://www.boomlings.com/database/deleteGJMessages20.php")
-                        .form(&params)
+                        .form(&deletion_params)
                         .send()
                         .await
                         .unwrap();
