@@ -30,6 +30,7 @@ pub async fn request_challenge(
 
 #[get("/api/v1/challenge_complete/<challenge_id>")]
 pub async fn challenge_complete(
+    mut conn: Connection<Db>,
     auth_stuff_meow: &State<AuthStuff>,
     challenge_id: &str,
 ) -> Result<Json<ApiResponse<String>>, GenericError> {
@@ -63,7 +64,15 @@ pub async fn challenge_complete(
 
         if completed_challenge.value() == &challenge.challenge {
             // todo: token stuff
-            return Ok(Json("meow".to_string().into()));
+            let token = Alphanumeric.sample_string(&mut rand::thread_rng(), 32);
+            sqlx::query!(
+                "UPDATE users SET token = ? WHERE id = ?",
+                token,
+                *completed_challenge.key()
+            )
+            .execute(&mut **conn)
+            .await?;
+            return Ok(Json(token.into()));
         } else {
             return Err(GenericError::InvalidAuthenticationError);
         }
