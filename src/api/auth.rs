@@ -66,9 +66,9 @@ pub async fn challenge_complete(
             // todo: token stuff
             let token = Alphanumeric.sample_string(&mut rand::thread_rng(), 32);
             sqlx::query!(
-                "UPDATE users SET token = ? WHERE id = ?",
+                "REPLACE INTO users (id, token) VALUES (?, ?)",
+                *completed_challenge.key(),
                 token,
-                *completed_challenge.key()
             )
             .execute(&mut **conn)
             .await?;
