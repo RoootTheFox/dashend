@@ -112,13 +112,13 @@ async fn main() -> Result<(), GenericError> {
                         completed_challenges.insert(m.from, auth_code.to_string());
                     }
 
-                    if message_deletion_string.len() > 0 {
+                    if !message_deletion_string.is_empty() {
                         message_deletion_string += ",";
                     }
                     message_deletion_string += &m.id;
                 });
 
-                if messages.len() > 0 {
+                if !messages.is_empty() {
                     // clean up!
                     let mut deletion_params = params.clone();
                     deletion_params.insert("messages", &message_deletion_string);

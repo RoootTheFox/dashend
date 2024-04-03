@@ -8,20 +8,19 @@ pub fn parse_gj_messages_response(meow: String) -> Vec<GDMessage> {
         return Vec::new();
     }
 
-    meow.split("|")
-        .into_iter()
+    meow.split('|')
         .map(|s| {
             let mut i = 0; // counter
             let mut last_key = 0;
             let mut values: HashMap<i32, &str> = HashMap::new();
-            s.split(":").into_iter().for_each(|a| {
+            s.split(':').for_each(|a| {
                 i += 1;
                 if i % 2 == 1 {
                     // key
-                    last_key = i32::from_str_radix(a, 10).unwrap(); // (this should never fail so unwrap is fine)
+                    last_key = a.parse::<i32>().unwrap(); // (this should never fail so unwrap is fine)
                 } else {
                     // val
-                    values.insert(last_key, a.trim_end_matches(" "));
+                    values.insert(last_key, a.trim_end_matches(' '));
                 }
             });
 
@@ -29,9 +28,9 @@ pub fn parse_gj_messages_response(meow: String) -> Vec<GDMessage> {
             let subject_value: Vec<u8> = values
                 .get(&4) // 4 = from account id
                 .unwrap_or(&"")
-                .trim_end_matches(" ")
+                .trim_end_matches(' ')
                 .as_bytes()
-                .into_iter()
+                .iter()
                 .filter_map(|a| {
                     if found_null_byte || *a == 0 {
                         found_null_byte = true;

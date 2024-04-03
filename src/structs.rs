@@ -8,9 +8,8 @@ use uuid::Uuid;
 
 #[derive(Error, Debug)]
 pub enum GenericError {
-    #[error("challenge already requested, try again later")]
-    AuthChallengeAlreadyRequested,
-
+    /*#[error("challenge already requested, try again later")]
+    AuthChallengeAlreadyRequested,*/
     #[error("invalid authentication")]
     InvalidAuthenticationError,
 
