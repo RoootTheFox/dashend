@@ -2,6 +2,7 @@ use crate::structs::{ApiResponse, Challenge, GenericError};
 use crate::{AuthStuff, Db};
 use rand::distributions::{Alphanumeric, DistString};
 use rocket::serde::json::Json;
+use rocket::tokio::time::{sleep, Duration};
 use rocket::State;
 use rocket_db_pools::Connection;
 use uuid::Uuid;
@@ -43,26 +44,28 @@ pub async fn challenge_complete(
     };
 
     let acc_id = challenge.key();
-    println!("account id: {}", acc_id);
 
-    let completed_challenge = match auth_stuff_meow.completed_challenges.get(acc_id) {
-        Some(c) => c,
-        None => {
-            println!(
-                "did NOT find challenge for {} in completed challenges",
-                acc_id
-            );
+    let mut tries = 0;
+    loop {
+        if tries >= 7 {
+            println!("oopsies (ran out of tries)");
             return Err(GenericError::InvalidAuthenticationError);
         }
-    };
+        tries += 1;
 
-    if completed_challenge.value() == &challenge.challenge {
-        println!("woohoo !!");
-    } else {
-        println!("nuh uh");
+        let completed_challenge = match auth_stuff_meow.completed_challenges.get(acc_id) {
+            Some(c) => c,
+            None => {
+                sleep(Duration::from_millis(500)).await;
+                continue;
+            }
+        };
+
+        if completed_challenge.value() == &challenge.challenge {
+            // todo: token stuff
+            return Ok(Json("meow".to_string().into()));
+        } else {
+            return Err(GenericError::InvalidAuthenticationError);
+        }
     }
-
-    println!("challenge key {:?}", challenge.key());
-
-    Ok(Json("meow".to_string().into()))
 }
