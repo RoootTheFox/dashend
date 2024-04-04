@@ -17,6 +17,7 @@ use rocket::fairing::AdHoc;
 use rocket::{tokio, Build, Config, Rocket};
 use std::collections::HashMap;
 use std::net::Ipv4Addr;
+use std::process::exit;
 use std::sync::Arc;
 
 #[derive(Database)]
@@ -61,10 +62,10 @@ async fn main() -> Result<(), GenericError> {
             },
         ));
 
-    let gd_account_id = dotenvy::var("GD_ACC_ID").unwrap();
+    let gd_account_id = dotenvy::var("GD_ACC_ID")?;
     let mut hasher = sha1_smol::Sha1::new();
     // i love rob
-    hasher.update(format!("{}mI29fmAnxgTs", dotenvy::var("GD_ACC_PW").unwrap()).as_bytes());
+    hasher.update(format!("{}mI29fmAnxgTs", dotenvy::var("GD_ACC_PW")?).as_bytes());
     let gd_account_gjp2 = hasher.digest().to_string();
     println!("gjp2: {}", gd_account_gjp2);
 
@@ -81,7 +82,10 @@ async fn main() -> Result<(), GenericError> {
                     headers
                 })
                 .build()
-                .unwrap();
+                .unwrap_or_else(|e| {
+                    eprintln!("failed to create reqwest client wtf ({:?}) !", e);
+                    exit(1)
+                });
             let mut params = HashMap::new();
             params.insert("secret", "Wmfd2893gb7");
             params.insert("accountID", &gd_account_id);
@@ -96,12 +100,18 @@ async fn main() -> Result<(), GenericError> {
                     let mut deletion_params = params.clone();
                     deletion_params.insert("messages", &message_deletion_string);
 
-                    let response = client
+                    let response = match client
                         .post("https://www.boomlings.com/database/deleteGJMessages20.php")
                         .form(&deletion_params)
                         .send()
                         .await
-                        .unwrap();
+                    {
+                        Ok(r) => r,
+                        Err(e) => {
+                            eprintln!("failed to delete messages: {}", e);
+                            continue;
+                        }
+                    };
                     let response_code = response.status();
                     let response_text = response.text().await.unwrap();
                     if response_code != 200 || response_text == "-1" {
@@ -109,19 +119,31 @@ async fn main() -> Result<(), GenericError> {
                     }
                 }
 
-                let response = client
+                let response = match client
                     .post("https://www.boomlings.com/database/getGJMessages20.php")
                     .form(&params)
                     .send()
                     .await
-                    .unwrap();
+                {
+                    Ok(r) => r,
+                    Err(e) => {
+                        eprintln!("failed to request messages: {}", e);
+                        continue;
+                    }
+                };
                 let response_code = response.status();
                 let response_text = response.text().await.unwrap();
                 if response_code != 200 || response_text == "-1" {
                     eprintln!("oopsie woopsie: {}: {}", response_code, response_text);
                 }
 
-                let messages = utils::parse_gj_messages_response(response_text);
+                let messages = match utils::parse_gj_messages_response(response_text) {
+                    Ok(msgs) => msgs,
+                    Err(e) => {
+                        eprintln!("failed getting messages!! {:?}", e);
+                        continue;
+                    }
+                };
 
                 message_deletion_string = "".to_string();
                 messages.iter().for_each(|m| {

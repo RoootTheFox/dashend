@@ -3,6 +3,7 @@ use rocket::response::Responder;
 use rocket::{response, Request, Response};
 use serde::{Deserialize, Serialize};
 use std::io::Cursor;
+use std::num::ParseIntError;
 use thiserror::Error;
 use uuid::Uuid;
 
@@ -30,6 +31,9 @@ pub enum GenericError {
 
     #[error("invalid uuid")]
     UuidError(#[from] uuid::Error),
+
+    #[error("invalid digit")]
+    ParseIntError(#[from] ParseIntError),
 }
 
 #[derive(Serialize, Deserialize)]
