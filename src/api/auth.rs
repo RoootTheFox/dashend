@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::structs::{ApiResponse, Challenge, GenericError};
 use crate::{AuthStuff, Db};
 use rand::distributions::{Alphanumeric, DistString};
@@ -24,7 +26,9 @@ pub async fn request_challenge(
         return Err(GenericError::AuthChallengeAlreadyRequested);
     }*/
 
-    authmap_meow.pending_challenges.insert(gd_acc, meow.clone());
+    authmap_meow
+        .pending_challenges
+        .insert(gd_acc, meow.clone(), Duration::from_secs(8));
     Ok(Json(meow.into()))
 }
 
@@ -35,19 +39,16 @@ pub async fn challenge_complete(
     challenge_id: &str,
 ) -> Result<Json<ApiResponse<String>>, GenericError> {
     let uuid: Uuid = challenge_id.parse()?;
-    let challenge = match auth_stuff_meow
-        .pending_challenges
-        .iter()
-        .find(|nya| nya.id == uuid)
-    {
+    let challenges: HashMap<_, _> = auth_stuff_meow.pending_challenges.snapshot();
+    let challenge = match challenges.iter().find(|nya| nya.1.id == uuid) {
         Some(a) => a,
         None => {
             println!("didn't find challenge");
             return Err(GenericError::InvalidAuthenticationError);
-        },
+        }
     };
 
-    let acc_id = challenge.key();
+    let acc_id = challenge.0;
 
     let mut tries = 0;
     loop {
@@ -58,14 +59,14 @@ pub async fn challenge_complete(
         tries += 1;
 
         let completed_challenge = match auth_stuff_meow.completed_challenges.get(acc_id) {
-            Some(c) => (c.key().clone(), c.value().clone()), // CLONE HERE since we do NOT want to have a reference (read below)
+            Some(c) => (acc_id, c.clone()), // CLONE HERE since we do NOT want to have a reference (read below)
             None => {
                 sleep(Duration::from_millis(500)).await;
                 continue;
             }
         };
 
-        if completed_challenge.1 == challenge.challenge {
+        if completed_challenge.1 == challenge.1.challenge {
             // !! this will block if a reference to completed_challenges is still alive !!
             auth_stuff_meow.completed_challenges.remove(acc_id);
 
@@ -80,7 +81,10 @@ pub async fn challenge_complete(
             .await?;
             return Ok(Json(token.into()));
         } else {
-            println!("nuh uh ???? {} =/= {}", completed_challenge.1, challenge.challenge);
+            println!(
+                "nuh uh ???? {} =/= {}",
+                completed_challenge.1, challenge.1.challenge
+            );
             return Err(GenericError::InvalidAuthenticationError);
         }
     }

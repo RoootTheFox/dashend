@@ -8,9 +8,9 @@ extern crate core;
 #[macro_use]
 extern crate rocket;
 
-use dashmap::DashMap;
 use rocket_db_pools::Database;
 use structs::Challenge;
+use timedmap::TimedMap;
 
 use crate::structs::GenericError;
 use rocket::fairing::AdHoc;
@@ -19,14 +19,15 @@ use std::collections::HashMap;
 use std::net::Ipv4Addr;
 use std::process::exit;
 use std::sync::Arc;
+use std::time::Duration;
 
 #[derive(Database)]
 #[database("sqlx")]
 struct Db(sqlx::SqlitePool);
 
 struct AuthStuff {
-    pending_challenges: Arc<DashMap<i64, Challenge>>,
-    completed_challenges: Arc<DashMap<i64, String>>,
+    pending_challenges: Arc<TimedMap<i64, Challenge>>,
+    completed_challenges: Arc<TimedMap<i64, String>>,
 }
 
 async fn run_migrations(rocket: Rocket<Build>) -> rocket::fairing::Result {
@@ -69,7 +70,7 @@ async fn main() -> Result<(), GenericError> {
     let gd_account_gjp2 = hasher.digest().to_string();
     println!("gjp2: {}", gd_account_gjp2);
 
-    let completed_challenges: Arc<DashMap<i64, String>> = DashMap::new().into();
+    let completed_challenges: Arc<TimedMap<i64, String>> = TimedMap::new().into();
     {
         let completed_challenges = Arc::clone(&completed_challenges); // clone so we can use it in the tokio closure
         tokio::spawn(async move {
@@ -150,7 +151,15 @@ async fn main() -> Result<(), GenericError> {
                     if m.subject.starts_with("auth-") {
                         let auth_code = m.subject.trim_start_matches("auth-");
                         println!("auth message from {} = {}", m.from, auth_code);
-                        completed_challenges.insert(m.from, auth_code.to_string());
+
+                        while completed_challenges.contains(&m.from) {
+                            completed_challenges.remove(&m.from);
+                        }
+                        completed_challenges.insert(
+                            m.from,
+                            auth_code.to_string(),
+                            Duration::from_secs(8),
+                        );
                     }
 
                     if !message_deletion_string.is_empty() {
@@ -166,7 +175,7 @@ async fn main() -> Result<(), GenericError> {
         .attach(Db::init())
         .attach(AdHoc::try_on_ignite("DB Migrations", run_migrations))
         .manage(AuthStuff {
-            pending_challenges: DashMap::new().into(),
+            pending_challenges: TimedMap::new().into(),
             completed_challenges,
         })
         .mount(
