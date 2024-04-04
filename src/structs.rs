@@ -39,7 +39,6 @@ pub enum GenericError {
 #[derive(Serialize, Deserialize)]
 pub struct ApiResponse<T> {
     success: bool,
-    code: Status,
     message: String,
     data: Option<T>,
 }
@@ -48,7 +47,6 @@ impl<T> From<T> for ApiResponse<T> {
     fn from(meow: T) -> ApiResponse<T> {
         ApiResponse {
             success: true,
-            code: Status::Ok,
             message: "".to_string(),
             data: Some(meow),
         }
@@ -63,7 +61,6 @@ impl GenericError {
     fn make_response_msg(self, code: Status, message: String) -> response::Result<'static> {
         let err: ApiResponse<Option<String>> = ApiResponse {
             success: false,
-            code,
             message,
             data: None,
         };
