@@ -87,38 +87,12 @@ async fn main() -> Result<(), GenericError> {
             params.insert("accountID", &gd_account_id);
             params.insert("gjp2", &gd_account_gjp2);
 
+            let mut message_deletion_string = "".to_string();
             loop {
                 interval.tick().await;
 
-                let response = client
-                    .post("https://www.boomlings.com/database/getGJMessages20.php")
-                    .form(&params)
-                    .send()
-                    .await
-                    .unwrap();
-                let response_code = response.status();
-                let response_text = response.text().await.unwrap();
-                if response_code != 200 || response_text == "-1" {
-                    eprintln!("oopsie woopsie: {}: {}", response_code, response_text);
-                }
-
-                let messages = utils::parse_gj_messages_response(response_text);
-
-                let mut message_deletion_string = "".to_string();
-                messages.iter().for_each(|m| {
-                    if m.subject.starts_with("auth-") {
-                        let auth_code = m.subject.trim_start_matches("auth-");
-                        println!("auth message from {} = {}", m.from, auth_code);
-                        completed_challenges.insert(m.from, auth_code.to_string());
-                    }
-
-                    if !message_deletion_string.is_empty() {
-                        message_deletion_string += ",";
-                    }
-                    message_deletion_string += &m.id;
-                });
-
-                if !messages.is_empty() {
+                // clean up **BEFORE** we get messages ?
+                if !message_deletion_string.is_empty() {
                     // clean up!
                     let mut deletion_params = params.clone();
                     deletion_params.insert("messages", &message_deletion_string);
@@ -135,6 +109,34 @@ async fn main() -> Result<(), GenericError> {
                         eprintln!("oopsie woopsie: {}: {}", response_code, response_text);
                     }
                 }
+
+                let response = client
+                    .post("https://www.boomlings.com/database/getGJMessages20.php")
+                    .form(&params)
+                    .send()
+                    .await
+                    .unwrap();
+                let response_code = response.status();
+                let response_text = response.text().await.unwrap();
+                if response_code != 200 || response_text == "-1" {
+                    eprintln!("oopsie woopsie: {}: {}", response_code, response_text);
+                }
+
+                let messages = utils::parse_gj_messages_response(response_text);
+
+                message_deletion_string = "".to_string();
+                messages.iter().for_each(|m| {
+                    if m.subject.starts_with("auth-") {
+                        let auth_code = m.subject.trim_start_matches("auth-");
+                        println!("auth message from {} = {}", m.from, auth_code);
+                        completed_challenges.insert(m.from, auth_code.to_string());
+                    }
+
+                    if !message_deletion_string.is_empty() {
+                        message_deletion_string += ",";
+                    }
+                    message_deletion_string += &m.id;
+                });
             }
             /*
             completed_challenges.iter().for_each(|a| {

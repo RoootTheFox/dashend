@@ -55,19 +55,22 @@ pub async fn challenge_complete(
         tries += 1;
 
         let completed_challenge = match auth_stuff_meow.completed_challenges.get(acc_id) {
-            Some(c) => c,
+            Some(c) => (c.key().clone(), c.value().clone()), // CLONE HERE since we do NOT want to have a reference (read below)
             None => {
                 sleep(Duration::from_millis(500)).await;
                 continue;
             }
         };
 
-        if completed_challenge.value() == &challenge.challenge {
+        if completed_challenge.1 == challenge.challenge {
+            // !! this will block if a reference to completed_challenges is still alive !!
+            auth_stuff_meow.completed_challenges.remove(acc_id);
+
             // todo: token stuff
             let token = Alphanumeric.sample_string(&mut rand::thread_rng(), 32);
             sqlx::query!(
                 "REPLACE INTO users (id, token) VALUES (?, ?)",
-                *completed_challenge.key(),
+                completed_challenge.0,
                 token,
             )
             .execute(&mut **conn)
