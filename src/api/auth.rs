@@ -41,7 +41,10 @@ pub async fn challenge_complete(
         .find(|nya| nya.id == uuid)
     {
         Some(a) => a,
-        None => return Err(GenericError::InvalidAuthenticationError),
+        None => {
+            println!("didn't find challenge");
+            return Err(GenericError::InvalidAuthenticationError);
+        },
     };
 
     let acc_id = challenge.key();
@@ -77,6 +80,7 @@ pub async fn challenge_complete(
             .await?;
             return Ok(Json(token.into()));
         } else {
+            println!("nuh uh ???? {} =/= {}", completed_challenge.1, challenge.challenge);
             return Err(GenericError::InvalidAuthenticationError);
         }
     }
