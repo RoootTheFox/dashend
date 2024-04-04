@@ -91,9 +91,8 @@ async fn main() -> Result<(), GenericError> {
             loop {
                 interval.tick().await;
 
-                // clean up **BEFORE** we get messages ?
+                // clean up **BEFORE** we get messages
                 if !message_deletion_string.is_empty() {
-                    // clean up!
                     let mut deletion_params = params.clone();
                     deletion_params.insert("messages", &message_deletion_string);
 
@@ -138,11 +137,6 @@ async fn main() -> Result<(), GenericError> {
                     message_deletion_string += &m.id;
                 });
             }
-            /*
-            completed_challenges.iter().for_each(|a| {
-                println!("{} -> {:?}", a.key(), a.value());
-            });
-            */
         });
     }
 
