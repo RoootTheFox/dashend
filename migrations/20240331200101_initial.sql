@@ -10,7 +10,7 @@ CREATE TABLE profiles (
     id INT PRIMARY KEY NOT NULL,
     bio TEXT, -- nudes in bio
     pronouns TINYTEXT, -- los pronombres hermanos --
-    --- social links ---
+    -- social links
     website           TINYTEXT, -- yeah
     social_github     TINYTEXT, -- @username
     social_bluesky    TINYTEXT, -- @domain.tld or @user.bsky.social

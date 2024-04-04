@@ -23,7 +23,7 @@ use std::time::Duration;
 
 #[derive(Database)]
 #[database("sqlx")]
-struct Db(sqlx::SqlitePool);
+struct Db(sqlx::MySqlPool);
 
 struct AuthStuff {
     pending_challenges: Arc<TimedMap<i64, Challenge>>,
