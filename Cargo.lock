@@ -292,6 +292,7 @@ dependencies = [
  "rand",
  "reqwest",
  "rocket",
+ "rocket-authorization",
  "rocket_db_pools",
  "serde",
  "serde_json",
@@ -1628,6 +1629,17 @@ dependencies = [
  "ubyte",
  "version_check",
  "yansi",
+]
+
+[[package]]
+name = "rocket-authorization"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fa2fe821919cb7646b4b46f0896874c9fd51e04b266349aef9e8f8a1bec36368"
+dependencies = [
+ "base64",
+ "rocket",
+ "thiserror",
 ]
 
 [[package]]

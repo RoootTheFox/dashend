@@ -182,6 +182,7 @@ async fn main() -> Result<(), GenericError> {
             "/",
             routes![
                 api::profile::get_profile,
+                api::profile::set_profile,
                 api::auth::request_challenge,
                 api::auth::challenge_complete
             ],

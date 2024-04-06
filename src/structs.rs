@@ -14,6 +14,9 @@ pub enum GenericError {
     #[error("invalid authentication")]
     InvalidAuthenticationError,
 
+    #[error("missing auth header")]
+    MissingAuthHeaderError(#[from] rocket_authorization::AuthError),
+
     #[error("io error")]
     IOError(#[from] std::io::Error),
 
@@ -99,7 +102,7 @@ impl<'r, 'o: 'r> Responder<'r, 'o> for GenericError {
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct Profile {
     pub(crate) id: i64,
     pub(crate) bio: Option<String>,
@@ -114,6 +117,13 @@ pub struct Profile {
     pub(crate) social_tumblr: Option<String>,
     pub(crate) social_myspace: Option<String>,
     pub(crate) social_facebook: Option<String>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct DBUser {
+    pub(crate) id: i64,
+    pub(crate) token: Option<String>,
+    pub(crate) token_expiration: Option<i64>,
 }
 
 #[derive(Serialize, Deserialize, Clone)]
