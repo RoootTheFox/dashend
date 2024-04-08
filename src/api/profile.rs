@@ -1,9 +1,17 @@
 use crate::structs::{ApiResponse, DBUser, GenericError, Profile};
 use crate::Db;
+use lazy_static::lazy_static;
+use regex::Regex;
 use rocket::serde::json::Json;
 use rocket_authorization::oauth::OAuth;
 use rocket_authorization::{AuthError, Credential};
 use rocket_db_pools::Connection;
+lazy_static! {
+    static ref PRONOUNS_REGEX: Regex = Regex::new(
+        r"^(s?he|the[ym]|it)/(her|s?he|him|the[ym]|its?)(/(her|s?he|him|the[ym]|its?))?$"
+    )
+    .expect("nuh uh?");
+}
 
 #[get("/api/v1/profiles/<id>")]
 pub async fn get_profile(
@@ -50,7 +58,15 @@ pub async fn set_profile(
         return Err(GenericError::InvalidAuthenticationError);
     }
 
-    // token verified, update db
+    // token verified, check data
+    let pronouns = profile.pronouns.clone().unwrap_or("".to_string());
+    if pronouns != "" && !PRONOUNS_REGEX.is_match(&pronouns) {
+        eprintln!(
+            "requested update with invalid pronouns: {} (does not match regex)",
+            pronouns
+        );
+        return Err(GenericError::InvalidPronounsError);
+    }
 
     sqlx::query_as!(
         Profile, "REPLACE INTO profiles (id, bio, pronouns, website, social_github, social_bluesky, social_fediverse, social_discord, social_matrix, social_tumblr, social_myspace, social_facebook) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
@@ -58,7 +74,7 @@ pub async fn set_profile(
         profile.social_discord, profile.social_matrix, profile.social_tumblr, profile.social_myspace, profile.social_facebook
     )
     .execute(&mut **conn)
-    .await?;    
+    .await?;
 
     Ok(Json("".to_string().into()))
 }

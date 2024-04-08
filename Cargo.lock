@@ -289,7 +289,9 @@ version = "0.1.0"
 dependencies = [
  "dotenvy",
  "easy_base64",
+ "lazy_static",
  "rand",
+ "regex",
  "reqwest",
  "rocket",
  "rocket-authorization",

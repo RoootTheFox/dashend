@@ -37,6 +37,9 @@ pub enum GenericError {
 
     #[error("invalid digit")]
     ParseIntError(#[from] ParseIntError),
+
+    #[error("invalid pronouns")]
+    InvalidPronounsError,
 }
 
 #[derive(Serialize, Deserialize)]
