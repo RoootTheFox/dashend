@@ -21,6 +21,10 @@ use std::process::exit;
 use std::sync::Arc;
 use std::time::Duration;
 
+lazy_static::lazy_static! {
+    static ref BOOMLINGS_SERVER: String = dotenvy::var("BOOMLINGS_SERVER_OVERRIDE").unwrap_or("https://www.boomlings.com".to_string());
+}
+
 #[derive(Database)]
 #[database("sqlx")]
 struct Db(sqlx::MySqlPool);
@@ -102,7 +106,7 @@ async fn main() -> Result<(), GenericError> {
                     deletion_params.insert("messages", &message_deletion_string);
 
                     let response = match client
-                        .post("https://www.boomlings.com/database/deleteGJMessages20.php")
+                        .post(format!("{}/database/deleteGJMessages20.php", BOOMLINGS_SERVER.as_str()))
                         .form(&deletion_params)
                         .send()
                         .await
@@ -121,7 +125,7 @@ async fn main() -> Result<(), GenericError> {
                 }
 
                 let response = match client
-                    .post("https://www.boomlings.com/database/getGJMessages20.php")
+                    .post(format!("{}/database/getGJMessages20.php", BOOMLINGS_SERVER.as_str()))
                     .form(&params)
                     .send()
                     .await
