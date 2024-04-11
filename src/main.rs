@@ -8,13 +8,14 @@ extern crate core;
 #[macro_use]
 extern crate rocket;
 
+use rocket::http::Header;
 use rocket_db_pools::Database;
 use structs::Challenge;
 use timedmap::TimedMap;
 
 use crate::structs::GenericError;
-use rocket::fairing::AdHoc;
-use rocket::{tokio, Build, Config, Rocket};
+use rocket::fairing::{AdHoc, Fairing, Info, Kind};
+use rocket::{tokio, Build, Config, Request, Response, Rocket};
 use std::collections::HashMap;
 use std::net::Ipv4Addr;
 use std::process::exit;
@@ -32,6 +33,33 @@ struct Db(sqlx::MySqlPool);
 struct AuthStuff {
     pending_challenges: Arc<TimedMap<i64, Challenge>>,
     completed_challenges: Arc<TimedMap<i64, String>>,
+}
+
+pub struct CORS;
+
+#[rocket::async_trait]
+impl Fairing for CORS {
+    fn info(&self) -> Info {
+        Info {
+            name: "fuck javascript shit language if you worked on fetch please fucking kill yourself you serve no purpose in life fuck you i hate you kys retard",
+            kind: Kind::Response,
+        }
+    }
+
+    async fn on_response<'r>(&self, _request: &'r Request<'_>, response: &mut Response<'r>) {
+        response.set_header(Header::new("Access-Control-Allow-Origin", "*"));
+        response.set_header(Header::new(
+            "Access-Control-Allow-Methods",
+            "POST, GET, PATCH, OPTIONS",
+        ));
+        response.set_header(Header::new("Access-Control-Allow-Headers", "*"));
+        response.set_header(Header::new("Access-Control-Allow-Credentials", "true"));
+    }
+}
+
+#[options("/<_..>")]
+fn all_options() {
+    /* Intentionally left empty */
 }
 
 async fn run_migrations(rocket: Rocket<Build>) -> rocket::fairing::Result {
@@ -184,6 +212,7 @@ async fn main() -> Result<(), GenericError> {
     let _rocket = rocket::build()
         .attach(Db::init())
         .attach(AdHoc::try_on_ignite("DB Migrations", run_migrations))
+        .attach(CORS)
         .manage(AuthStuff {
             pending_challenges: TimedMap::new().into(),
             completed_challenges,
@@ -194,7 +223,8 @@ async fn main() -> Result<(), GenericError> {
                 api::profile::get_profile,
                 api::profile::set_profile,
                 api::auth::request_challenge,
-                api::auth::challenge_complete
+                api::auth::challenge_complete,
+                all_options // fuck you cors, kys
             ],
         )
         .configure(figment)
