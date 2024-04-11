@@ -106,7 +106,10 @@ async fn main() -> Result<(), GenericError> {
                     deletion_params.insert("messages", &message_deletion_string);
 
                     let response = match client
-                        .post(format!("{}/database/deleteGJMessages20.php", BOOMLINGS_SERVER.as_str()))
+                        .post(format!(
+                            "{}/database/deleteGJMessages20.php",
+                            BOOMLINGS_SERVER.as_str()
+                        ))
                         .form(&deletion_params)
                         .send()
                         .await
@@ -125,7 +128,10 @@ async fn main() -> Result<(), GenericError> {
                 }
 
                 let response = match client
-                    .post(format!("{}/database/getGJMessages20.php", BOOMLINGS_SERVER.as_str()))
+                    .post(format!(
+                        "{}/database/getGJMessages20.php",
+                        BOOMLINGS_SERVER.as_str()
+                    ))
                     .form(&params)
                     .send()
                     .await
