@@ -1,7 +1,7 @@
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use crate::structs::{ApiResponse, DBUser, GenericError, Profile};
-use crate::utils::checkdiscordusername;
+use crate::structs::{ApiResponse, DBUser, DBUserMisc, GenericError, Profile};
+use crate::utils::check_discord_username;
 use crate::Db;
 use lazy_static::lazy_static;
 use regex::Regex;
@@ -21,22 +21,26 @@ pub async fn get_profile(
     mut conn: Connection<Db>,
     id: u32,
 ) -> Result<Json<ApiResponse<Profile>>, GenericError> {
-    let time = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
+    let time = SystemTime::now().duration_since(UNIX_EPOCH).expect("").as_secs();
     let time = time - 86400;
+
+    let user_misc = sqlx::query_as!(DBUserMisc, "SELECT * FROM user_misc WHERE id = ?", id)
+        .fetch_one(&mut **conn)
+        .await?;
+    let profile = sqlx::query_as!(Profile, "SELECT * FROM profiles WHERE id = ?", id)
+        .fetch_one(&mut **conn)
+        .await?;
+
+    if time < user_misc.check_timeout.expect("") as u64 {
+        println!("not checking (less than 24 hours have passed)")
+    } else {
+        println!("checking");
+        check_discord_username(&mut conn, profile.social_discord.unwrap_or("".to_string()), id).await;
+    }
 
     let profile = sqlx::query_as!(Profile, "SELECT * FROM profiles WHERE id = ?", id)
         .fetch_one(&mut **conn)
         .await?;
-    let users = sqlx::query_as!(DBUser, "SELECT * FROM users WHERE id = ?", id)
-        .fetch_one(&mut **conn)
-        .await?;
-
-    if time < users.check_timeout.unwrap() as u64 {
-        println!("not checking (less than 24 hours have passed)")
-    } else {
-        println!("checking");
-        checkdiscordusername(conn, profile.social_discord.clone().unwrap(), id).await;
-    }
 
     Ok(Json(profile.into()))
 }
