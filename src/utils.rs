@@ -4,7 +4,7 @@ use regex::Regex;
 use reqwest::Client;
 use rocket_db_pools::Connection;
 
-use crate::{structs::{DBUser, GDMessage, GenericError}, Db};
+use crate::{structs::{GDMessage, GenericError}, Db};
 
 pub fn parse_gj_messages_response(meow: String) -> Result<Vec<GDMessage>, GenericError> {
     if meow == "-2" {
@@ -58,7 +58,7 @@ pub fn parse_gj_messages_response(meow: String) -> Result<Vec<GDMessage>, Generi
 pub async fn checkdiscordusername(mut conn: Connection<Db>, discord_snowflake: String, id: u32) {
     let time = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
     sqlx::query_as!(DBUser, "UPDATE users SET check_timeout = ? WHERE id = ?", time, id).execute(&mut **conn).await.unwrap();
-    
+
     let client = Client::new();
 
     let regex = Regex::new(r".*:").unwrap();
@@ -80,7 +80,7 @@ pub async fn checkdiscordusername(mut conn: Connection<Db>, discord_snowflake: S
 
     let crack = ajson::get(&req, "username").unwrap().unwrap();
 
-    if crack.to_string() == username.to_string() {
+    if crack == username.to_string() {
         println!("dont change username")
     } else {
         println!("change username");
