@@ -21,7 +21,10 @@ pub async fn get_profile(
     mut conn: Connection<Db>,
     id: u32,
 ) -> Result<Json<ApiResponse<Profile>>, GenericError> {
-    let time = SystemTime::now().duration_since(UNIX_EPOCH).expect("").as_secs();
+    let time = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("")
+        .as_secs();
     let time = time - 86400;
 
     let user_misc = sqlx::query_as!(DBUserMisc, "SELECT * FROM user_misc WHERE id = ?", id)
@@ -35,7 +38,12 @@ pub async fn get_profile(
         println!("not checking (less than 24 hours have passed)")
     } else {
         println!("checking");
-        check_discord_username(&mut conn, profile.social_discord.unwrap_or("".to_string()), id).await;
+        check_discord_username(
+            &mut conn,
+            profile.social_discord.unwrap_or("".to_string()),
+            id,
+        )
+        .await;
     }
 
     let profile = sqlx::query_as!(Profile, "SELECT * FROM profiles WHERE id = ?", id)
