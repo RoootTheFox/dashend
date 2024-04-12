@@ -40,6 +40,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "ajson"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2823776cf8f578eff094145c11eb7e3e2eabf596a6fdf88684931c11cf2db1c5"
+dependencies = [
+ "smallvec",
+]
+
+[[package]]
 name = "allocator-api2"
 version = "0.2.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -287,6 +296,7 @@ dependencies = [
 name = "dashend"
 version = "0.1.0"
 dependencies = [
+ "ajson",
  "dotenvy",
  "easy_base64",
  "lazy_static",

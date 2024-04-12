@@ -2,7 +2,8 @@
 CREATE TABLE users (
     id INT PRIMARY KEY NOT NULL,
     token TEXT,
-    token_expiration BIGINT
+    token_expiration BIGINT,
+    check_timeout BIGINT
 );
 
 -- initial profile table

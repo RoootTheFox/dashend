@@ -127,6 +127,7 @@ pub struct DBUser {
     pub(crate) id: i64,
     pub(crate) token: Option<String>,
     pub(crate) token_expiration: Option<i64>,
+    pub(crate) check_timeout: Option<i64>,
 }
 
 #[derive(Serialize, Deserialize, Clone)]

@@ -1,6 +1,10 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, time::{SystemTime, UNIX_EPOCH}};
 
-use crate::structs::{GDMessage, GenericError};
+use regex::Regex;
+use reqwest::Client;
+use rocket_db_pools::Connection;
+
+use crate::{structs::{DBUser, GDMessage, GenericError}, Db};
 
 pub fn parse_gj_messages_response(meow: String) -> Result<Vec<GDMessage>, GenericError> {
     if meow == "-2" {
@@ -49,4 +53,43 @@ pub fn parse_gj_messages_response(meow: String) -> Result<Vec<GDMessage>, Generi
             })
         })
         .collect()
+}
+
+pub async fn checkdiscordusername(mut conn: Connection<Db>, discord_snowflake: String, id: u32) {
+    let time = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs();
+    sqlx::query_as!(DBUser, "UPDATE users SET check_timeout = ? WHERE id = ?", time, id).execute(&mut **conn).await.unwrap();
+    
+    let client = Client::new();
+
+    let regex = Regex::new(r".*:").unwrap();
+    let snowflake = regex.replace_all(&discord_snowflake, "");
+
+    let regex = Regex::new(r":|\d").unwrap();
+    let username = regex.replace_all(&discord_snowflake, "");
+
+    //dbg!(username);
+
+    let req = client.get(format!("https://discord.com/api/v9/users/{}", snowflake))
+    .header("Authorization", format!("Bot {}", dotenvy::var("DC_BOT_TOKEN").unwrap()))
+    .send()
+    .await
+    .unwrap()
+    .text()
+    .await
+    .unwrap();
+
+    let crack = ajson::get(&req, "username").unwrap().unwrap();
+
+    if crack.to_string() == username.to_string() {
+        println!("dont change username")
+    } else {
+        println!("change username");
+        sqlx::query!(
+            r#"UPDATE profiles SET social_discord = ? WHERE id = ?"#,
+            format!("{}:{}", crack.to_string(), snowflake.to_string().as_str()), id
+        )
+        .execute(&mut **conn)
+        .await
+        .unwrap();
+    }
 }
