@@ -23,7 +23,7 @@ pub async fn get_profile(
 ) -> Result<Json<ApiResponse<Profile>>, GenericError> {
     let time = SystemTime::now()
         .duration_since(UNIX_EPOCH)
-        .expect("")
+        .unwrap()
         .as_secs();
     let time = time - 86400;
 

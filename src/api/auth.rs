@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::structs::{ApiResponse, Challenge, GenericError};
 use crate::{AuthStuff, Db};
@@ -76,6 +77,13 @@ pub async fn challenge_complete(
                 "REPLACE INTO users (id, token) VALUES (?, ?)",
                 completed_challenge.0,
                 token,
+            )
+            .execute(&mut **conn)
+            .await?;
+            sqlx::query!(
+                "REPLACE INTO user_misc (id, check_timeout) VALUES (?, ?)",
+                completed_challenge.0,
+                SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_secs()
             )
             .execute(&mut **conn)
             .await?;
