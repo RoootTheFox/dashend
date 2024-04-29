@@ -41,7 +41,7 @@ pub struct CORS;
 impl Fairing for CORS {
     fn info(&self) -> Info {
         Info {
-            name: "fuck javascript shit language if you worked on fetch please fucking kill yourself you serve no purpose in life fuck you i hate you kys retard",
+            name: "i hate CORS",
             kind: Kind::Response,
         }
     }
@@ -224,7 +224,7 @@ async fn main() -> Result<(), GenericError> {
                 api::profile::set_profile,
                 api::auth::request_challenge,
                 api::auth::challenge_complete,
-                all_options // fuck you cors, kys
+                all_options // fuck you cors
             ],
         )
         .configure(figment)
