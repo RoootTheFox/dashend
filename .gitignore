@@ -1,4 +1,6 @@
 /target
 *.sqlite3
 /.env
+/.env.prod
+/.env.dev
 /.vscode
