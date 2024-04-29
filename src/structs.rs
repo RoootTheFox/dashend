@@ -120,6 +120,10 @@ pub struct Profile {
     pub(crate) social_tumblr: Option<String>,
     pub(crate) social_myspace: Option<String>,
     pub(crate) social_facebook: Option<String>,
+
+    // other stuff
+    pub(crate) color1: Option<i32>,
+    pub(crate) color2: Option<i32>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

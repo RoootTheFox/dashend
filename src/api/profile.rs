@@ -69,9 +69,9 @@ pub async fn set_profile(
     }
 
     sqlx::query_as!(
-        Profile, "REPLACE INTO profiles (id, bio, pronouns, website, social_github, social_bluesky, social_fediverse, social_discord, social_matrix, social_tumblr, social_myspace, social_facebook) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        Profile, "REPLACE INTO profiles (id, bio, pronouns, website, social_github, social_bluesky, social_fediverse, social_discord, social_matrix, social_tumblr, social_myspace, social_facebook, color1, color2) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         profile.id, profile.bio, profile.pronouns, profile.website, profile.social_github, profile.social_bluesky, profile.social_fediverse,
-        profile.social_discord, profile.social_matrix, profile.social_tumblr, profile.social_myspace, profile.social_facebook
+        profile.social_discord, profile.social_matrix, profile.social_tumblr, profile.social_myspace, profile.social_facebook, profile.color1, profile.color2
     )
     .execute(&mut **conn)
     .await?;
