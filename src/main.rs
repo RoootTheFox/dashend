@@ -137,7 +137,7 @@ async fn main() -> Result<(), GenericError> {
                     let response = match client
                         .post(format!(
                             "{}/database/deleteGJMessages20.php",
-                            BOOMLINGS_SERVER.as_str()
+                            utils::proxy_list().await.unwrap()
                         ))
                         .form(&deletion_params)
                         .send()
@@ -159,7 +159,7 @@ async fn main() -> Result<(), GenericError> {
                 let response = match client
                     .post(format!(
                         "{}/database/getGJMessages20.php",
-                        BOOMLINGS_SERVER.as_str()
+                        utils::proxy_list().await.unwrap()
                     ))
                     .form(&params)
                     .send()

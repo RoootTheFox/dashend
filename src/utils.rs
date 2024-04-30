@@ -1,6 +1,14 @@
 use std::collections::HashMap;
 
-use crate::structs::{GDMessage, GenericError};
+use rand::Rng;
+use serde::Deserialize;
+
+use crate::{structs::{GDMessage, GenericError}, BOOMLINGS_SERVER};
+
+#[derive(Deserialize)]
+struct Servers {
+    servers: Vec<String>,
+}
 
 pub fn parse_gj_messages_response(meow: String) -> Result<Vec<GDMessage>, GenericError> {
     if meow == "-2" {
@@ -49,4 +57,19 @@ pub fn parse_gj_messages_response(meow: String) -> Result<Vec<GDMessage>, Generi
             })
         })
         .collect()
+}
+
+pub async fn proxy_list() -> Result<String, GenericError> {
+    let srv: String = if std::fs::File::open("servers.json").is_err() {
+        BOOMLINGS_SERVER.to_string()
+    } else {
+        let file = std::fs::read_to_string("servers.json")?;
+        let s: Servers = serde_json::from_str(&file).unwrap();
+        let count = s.servers.len();
+        let num = rand::thread_rng().gen_range(0..count) as usize;
+        let s1 = &s.servers[num];
+
+        s1.to_string()
+    };
+    Ok(srv)
 }
