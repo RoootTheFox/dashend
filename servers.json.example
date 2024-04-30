@@ -1,4 +1,4 @@
 {
-    "servers": ["www.boomlings.com", "example.com", "example2.com"]
+    "servers": ["https://www.boomlings.com", "https://example.com", "http://example2.com"]
 }
 

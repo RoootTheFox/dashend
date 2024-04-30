@@ -66,7 +66,7 @@ pub async fn proxy_list() -> Result<String, GenericError> {
         let file = std::fs::read_to_string("servers.json")?;
         let s: Servers = serde_json::from_str(&file).unwrap();
         let count = s.servers.len();
-        let num = rand::thread_rng().gen_range(0..count) as usize;
+        let num = rand::thread_rng().gen_range(0..count);
         let s1 = &s.servers[num];
 
         s1.to_string()
