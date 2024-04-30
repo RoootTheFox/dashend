@@ -38,8 +38,6 @@ pub async fn set_profile(
 ) -> Result<Json<ApiResponse<String>>, GenericError> {
     let auth = auth?;
 
-    dbg!(&profile);
-
     // verify token - todo: move this into a seperate function
     sqlx::query_as!(
         DBUser,
