@@ -45,6 +45,7 @@ lazy_static::lazy_static! {
         trie.set("ass", Type::NONE);
         trie.set("gayass", Type::NONE);
         trie.set("gaygirl", Type::NONE);
+        trie.set("sex", Type::NONE);
 
         trie.set("lesbian", Type::NONE);
         trie.set("homosexual", Type::NONE);
