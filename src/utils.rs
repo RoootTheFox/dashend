@@ -61,11 +61,12 @@ pub fn parse_gj_messages_response(meow: String) -> Result<Vec<GDMessage>, Generi
         .collect()
 }
 
-pub async fn check_discord_username(conn: &mut Connection<Db>, discord_snowflake: String, id: u32) {
-    let time = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .expect("")
-        .as_secs();
+pub async fn check_discord_username(
+    conn: &mut Connection<Db>,
+    discord_snowflake: String,
+    id: u32,
+) -> Result<(), GenericError> {
+    let time = SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs();
     sqlx::query_as!(
         DBUserMisc,
         "UPDATE user_misc SET check_timeout = ? WHERE id = ?",
@@ -73,31 +74,33 @@ pub async fn check_discord_username(conn: &mut Connection<Db>, discord_snowflake
         id
     )
     .execute(&mut ***conn)
-    .await
-    .unwrap();
+    .await?;
 
     let client = Client::new();
 
-    let regex = Regex::new(r".*:").unwrap();
+    let regex = Regex::new(r".*:")?;
     let snowflake = regex.replace_all(discord_snowflake.as_str(), "");
 
-    let regex = Regex::new(r":|\d").unwrap();
+    let regex = Regex::new(r":|\d")?;
     let username = regex.replace_all(discord_snowflake.as_str(), "");
 
     let req = client
         .get(format!("https://discord.com/api/v9/users/{}", snowflake))
         .header(
             "Authorization",
-            format!("Bot {}", dotenvy::var("DC_BOT_TOKEN").unwrap()),
+            format!("Bot {}", dotenvy::var("DC_BOT_TOKEN")?),
         )
         .send()
-        .await
-        .unwrap()
+        .await?
         .text()
-        .await
-        .unwrap();
+        .await?;
 
-    let real_username = ajson::get(&req, "username").unwrap().unwrap();
+    let val: serde_json::Value = serde_json::from_str(&req)?;
+    let real_username = val
+        .get("username")
+        .ok_or(GenericError::MissingFieldError)?
+        .as_str()
+        .ok_or(GenericError::InvalidFieldError)?;
 
     if real_username == username.to_string() {
         println!("dont change username")
@@ -113,7 +116,8 @@ pub async fn check_discord_username(conn: &mut Connection<Db>, discord_snowflake
             id
         )
         .execute(&mut ***conn)
-        .await
-        .unwrap();
+        .await?;
     }
+
+    Ok(())
 }

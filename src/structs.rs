@@ -38,6 +38,24 @@ pub enum GenericError {
     #[error("invalid digit")]
     ParseIntError(#[from] ParseIntError),
 
+    #[error("json error")]
+    JsonError(#[from] serde_json::Error),
+
+    #[error("missing field")]
+    MissingFieldError,
+
+    #[error("invalid field")]
+    InvalidFieldError,
+
+    #[error("regex error")]
+    RegexError(#[from] regex::Error),
+
+    #[error("reqwest error")]
+    ReqwestError(#[from] reqwest::Error),
+
+    #[error("system time error")]
+    SystemTimeError(#[from] std::time::SystemTimeError),
+
     #[error("invalid pronouns")]
     InvalidPronounsError,
 }
