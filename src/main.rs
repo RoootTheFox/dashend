@@ -1,6 +1,7 @@
 mod api;
 mod structs;
 mod utils;
+mod catchers;
 
 #[macro_use]
 extern crate core;
@@ -217,6 +218,7 @@ async fn main() -> Result<(), GenericError> {
             pending_challenges: TimedMap::new().into(),
             completed_challenges,
         })
+        .register("/", catchers!(catchers::catch_500, catchers::catch_401, catchers::catch_400, catchers::catch_404, catchers::catch_422))
         .mount(
             "/",
             routes![
