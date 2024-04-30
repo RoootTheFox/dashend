@@ -56,6 +56,9 @@ pub enum GenericError {
     #[error("system time error")]
     SystemTimeError(#[from] std::time::SystemTimeError),
 
+    #[error("Option was None error")]
+    OptionNoneError,
+
     #[error("invalid pronouns")]
     InvalidPronounsError,
 }

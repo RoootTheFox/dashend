@@ -34,7 +34,11 @@ pub async fn get_profile(
         .fetch_one(&mut **conn)
         .await?;
 
-    if time < user_misc.check_timeout.expect("") as u64 {
+    if time
+        < user_misc
+            .check_timeout
+            .ok_or(GenericError::OptionNoneError)? as u64
+    {
         println!("not checking (less than 24 hours have passed)")
     } else {
         println!("checking");
@@ -43,7 +47,7 @@ pub async fn get_profile(
             profile.social_discord.unwrap_or("".to_string()),
             id,
         )
-        .await;
+        .await?;
     }
 
     let profile = sqlx::query_as!(Profile, "SELECT * FROM profiles WHERE id = ?", id)

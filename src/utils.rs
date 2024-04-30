@@ -8,7 +8,7 @@ use reqwest::Client;
 use rocket_db_pools::Connection;
 
 use crate::{
-    structs::{GDMessage, GenericError, Profile},
+    structs::{GDMessage, GenericError},
     Db,
 };
 

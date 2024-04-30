@@ -83,10 +83,7 @@ pub async fn challenge_complete(
             sqlx::query!(
                 "REPLACE INTO user_misc (id, check_timeout) VALUES (?, ?)",
                 completed_challenge.0,
-                SystemTime::now()
-                    .duration_since(UNIX_EPOCH)
-                    .unwrap()
-                    .as_secs()
+                SystemTime::now().duration_since(UNIX_EPOCH)?.as_secs()
             )
             .execute(&mut **conn)
             .await?;
