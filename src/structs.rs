@@ -133,6 +133,12 @@ pub struct DBUser {
     pub(crate) token_expiration: Option<i64>,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct DBUserMisc {
+    pub(crate) id: i64,
+    pub(crate) check_timeout: Option<i64>,
+}
+
 #[derive(Serialize, Deserialize, Clone)]
 pub struct Challenge {
     pub(crate) bot_account_id: u32,

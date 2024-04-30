@@ -1,6 +1,16 @@
-use std::collections::HashMap;
+use std::{
+    collections::HashMap,
+    time::{SystemTime, UNIX_EPOCH},
+};
 
-use crate::structs::{GDMessage, GenericError};
+use regex::Regex;
+use reqwest::Client;
+use rocket_db_pools::Connection;
+
+use crate::{
+    structs::{GDMessage, GenericError, Profile},
+    Db,
+};
 
 pub fn parse_gj_messages_response(meow: String) -> Result<Vec<GDMessage>, GenericError> {
     if meow == "-2" {
@@ -49,4 +59,61 @@ pub fn parse_gj_messages_response(meow: String) -> Result<Vec<GDMessage>, Generi
             })
         })
         .collect()
+}
+
+pub async fn check_discord_username(conn: &mut Connection<Db>, discord_snowflake: String, id: u32) {
+    let time = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .expect("")
+        .as_secs();
+    sqlx::query_as!(
+        DBUserMisc,
+        "UPDATE user_misc SET check_timeout = ? WHERE id = ?",
+        time,
+        id
+    )
+    .execute(&mut ***conn)
+    .await
+    .unwrap();
+
+    let client = Client::new();
+
+    let regex = Regex::new(r".*:").unwrap();
+    let snowflake = regex.replace_all(discord_snowflake.as_str(), "");
+
+    let regex = Regex::new(r":|\d").unwrap();
+    let username = regex.replace_all(discord_snowflake.as_str(), "");
+
+    let req = client
+        .get(format!("https://discord.com/api/v9/users/{}", snowflake))
+        .header(
+            "Authorization",
+            format!("Bot {}", dotenvy::var("DC_BOT_TOKEN").unwrap()),
+        )
+        .send()
+        .await
+        .unwrap()
+        .text()
+        .await
+        .unwrap();
+
+    let real_username = ajson::get(&req, "username").unwrap().unwrap();
+
+    if real_username == username.to_string() {
+        println!("dont change username")
+    } else {
+        println!("change username");
+        sqlx::query!(
+            r#"UPDATE profiles SET social_discord = ? WHERE id = ?"#,
+            format!(
+                "{}:{}",
+                real_username.to_string(),
+                snowflake.to_string().as_str()
+            ),
+            id
+        )
+        .execute(&mut ***conn)
+        .await
+        .unwrap();
+    }
 }
