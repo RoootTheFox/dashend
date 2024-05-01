@@ -87,7 +87,7 @@ pub async fn set_profile(
             if censor
                 .with_trie(&crate::CUSTOM_TRIE)
                 .analyze()
-                .is(Type::SEXUAL | Type::PROFANE)
+                .is(Type::SEVERE | Type::EVASIVE | Type::PROFANE)
             {
                 println!(
                     "user {} tried to set a bio with inappropriate content: {}",
