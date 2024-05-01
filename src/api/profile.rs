@@ -6,6 +6,8 @@ use rocket::serde::json::Json;
 use rocket_authorization::oauth::OAuth;
 use rocket_authorization::{AuthError, Credential};
 use rocket_db_pools::Connection;
+use rustrict::{Censor, CensorStr, Type};
+
 lazy_static! {
     static ref PRONOUNS_REGEX: Regex = Regex::new(
         r"^(s?he|the[ym]|it)/(her|s?he|him|the[ym]|its?)(/(her|s?he|him|the[ym]|its?))?$"
@@ -66,6 +68,35 @@ pub async fn set_profile(
             pronouns
         );
         return Err(GenericError::InvalidPronounsError);
+    }
+
+    // check profanity
+    match profile.bio {
+        Some(ref bio) => {
+            if bio.is(Type::SEVERE) {
+                // todo: ban.
+                println!(
+                    "user {} tried to set a bio with SEVERE profanity: {}",
+                    id, bio
+                );
+                return Err(GenericError::ProfanityError);
+            }
+
+            let mut censor = Censor::from_str(bio);
+
+            if censor
+                .with_trie(&crate::CUSTOM_TRIE)
+                .analyze()
+                .is(Type::SEVERE | Type::EVASIVE | Type::PROFANE)
+            {
+                println!(
+                    "user {} tried to set a bio with inappropriate content: {}",
+                    id, bio
+                );
+                return Err(GenericError::ProfanityError);
+            }
+        }
+        None => {}
     }
 
     sqlx::query_as!(

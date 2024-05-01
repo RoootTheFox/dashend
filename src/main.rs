@@ -10,6 +10,7 @@ extern crate rocket;
 
 use rocket::http::Header;
 use rocket_db_pools::Database;
+use rustrict::{Trie, Type};
 use structs::Challenge;
 use timedmap::TimedMap;
 
@@ -22,8 +23,44 @@ use std::process::exit;
 use std::sync::Arc;
 use std::time::Duration;
 
+/*
+rustrict::add_word("pussy", Type::SAFE);
+rustrict::add_word("gay", Type::SAFE);
+rustrict::add_word("homosexual", Type::SAFE);
+rustrict::add_word("fuck", Type::SAFE);
+*/
+// custom trie
+
 lazy_static::lazy_static! {
     static ref BOOMLINGS_SERVER: String = dotenvy::var("BOOMLINGS_SERVER_OVERRIDE").unwrap_or("https://www.boomlings.com".to_string());
+    static ref CUSTOM_TRIE: Trie = {
+        let mut trie = Trie::default();
+        // these words are fine enough, we don't want to over-censor
+        // a lot of these are taken from `strings <binary>`
+        trie.set("gay", Type::NONE);
+        trie.set("gayy", Type::NONE);
+        trie.set("gays", Type::NONE);
+        trie.set("pussy", Type::NONE);
+        trie.set("fuck", Type::NONE);
+        trie.set("ass", Type::NONE);
+        trie.set("gayass", Type::NONE);
+        trie.set("gaygirl", Type::NONE);
+        trie.set("sex", Type::NONE);
+
+        trie.set("lesbian", Type::NONE);
+        trie.set("homosexual", Type::NONE);
+        trie.set("bisexual", Type::NONE);
+        trie.set("asexual", Type::NONE);
+        trie.set("pansexual", Type::NONE);
+        trie.set("demisexual", Type::NONE);
+        // todo: add the rest lmao
+
+        // some slurs
+        trie.set("tranny", Type::SEVERE);
+        trie.set("trannies", Type::SEVERE);
+
+        trie
+    };
 }
 
 #[derive(Database)]
