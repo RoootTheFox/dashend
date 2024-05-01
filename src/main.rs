@@ -143,7 +143,7 @@ async fn main() -> Result<(), GenericError> {
     {
         let completed_challenges = Arc::clone(&completed_challenges); // clone so we can use it in the tokio closure
         tokio::spawn(async move {
-            let mut interval = tokio::time::interval(tokio::time::Duration::from_secs(3));
+            let mut interval = tokio::time::interval(tokio::time::Duration::from_millis(1500));
 
             let client = reqwest::Client::builder()
                 .default_headers({
