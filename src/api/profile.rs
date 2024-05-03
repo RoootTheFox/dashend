@@ -1,4 +1,5 @@
 use crate::structs::{ApiResponse, DBUser, GenericError, Profile};
+use crate::utils::valid_url_check;
 use crate::Db;
 use lazy_static::lazy_static;
 use regex::Regex;
@@ -66,6 +67,11 @@ pub async fn set_profile(
             pronouns
         );
         return Err(GenericError::InvalidPronounsError);
+    }
+
+    let website = profile.website.clone().unwrap_or("".to_string());
+    if website != "" && !valid_url_check(&website) {
+        return Err(GenericError::InvalidWebsiteError);
     }
 
     sqlx::query_as!(
