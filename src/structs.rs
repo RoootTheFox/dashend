@@ -43,6 +43,9 @@ pub enum GenericError {
 
     #[error("profanity")]
     ProfanityError,
+
+    #[error("invalid website")]
+    InvalidWebsiteError,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -90,6 +93,12 @@ impl<'r, 'o: 'r> Responder<'r, 'o> for GenericError {
             GenericError::InvalidAuthenticationError => {
                 self.make_response(Status::InternalServerError)
             }
+            GenericError::InvalidPronounsError => {
+                self.make_response_msg(Status::BadRequest, "Unacceptable Pronouns (If you think this is an error, contact RoootTheFox)".to_string())
+            }
+            GenericError::InvalidWebsiteError => {
+                self.make_response_msg(Status::BadRequest, "Invalid URL (missing 'http(s)://' ?)".to_string())
+            }
             GenericError::UuidError(..) => {
                 self.make_response_msg(Status::BadRequest, "invalid uuid".to_string())
             }
@@ -109,6 +118,8 @@ impl<'r, 'o: 'r> Responder<'r, 'o> for GenericError {
                 If you think this is a false-positive, please contact rooot."
                     .to_string(),
             ),
+
+            
 
             _ => Status::InternalServerError.respond_to(req),
         }

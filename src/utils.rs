@@ -1,6 +1,14 @@
 use std::collections::HashMap;
 
-use crate::structs::{GDMessage, GenericError};
+use rand::Rng;
+use serde::Deserialize;
+
+use crate::{structs::{GDMessage, GenericError}, BOOMLINGS_SERVER};
+
+#[derive(Deserialize)]
+struct Servers {
+    servers: Vec<String>,
+}
 
 pub fn parse_gj_messages_response(meow: String) -> Result<Vec<GDMessage>, GenericError> {
     if meow == "-2" {
@@ -49,4 +57,36 @@ pub fn parse_gj_messages_response(meow: String) -> Result<Vec<GDMessage>, Generi
             })
         })
         .collect()
+}
+
+pub fn valid_url_check(url: &str) -> bool {
+    let reg = regex::Regex::new(r#"^(http://www\.|https://www\.|http://|https://)?[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(/.*)?$"#).unwrap();
+
+    if reg.is_match(&url.to_lowercase()) {
+        true
+    } else if reg.is_match(&url.to_lowercase()) {
+        true
+    } else {
+        println!("\x1b[0;31mInvalid URL ({})\x1b[0m", url);
+        false
+    }
+}
+
+pub async fn proxy_list() -> Result<String, GenericError> {
+    let srv: String = if std::fs::File::open("servers.json").is_err() {
+        BOOMLINGS_SERVER.to_string()
+    } else {
+        let file = std::fs::read_to_string("servers.json")?;
+        let s: Servers = serde_json::from_str(&file).unwrap();
+        let count = s.servers.len();
+        let num = rand::thread_rng().gen_range(0..count);
+
+        if !s.servers[num].is_empty() && valid_url_check(&*s.servers[num]) {
+        }
+
+        let s1 = &s.servers[num];
+
+        s1.to_string()
+    };
+    Ok(srv)
 }

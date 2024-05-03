@@ -1,6 +1,7 @@
 mod api;
 mod structs;
 mod utils;
+mod catchers;
 
 #[macro_use]
 extern crate core;
@@ -173,7 +174,7 @@ async fn main() -> Result<(), GenericError> {
                     let response = match client
                         .post(format!(
                             "{}/database/deleteGJMessages20.php",
-                            BOOMLINGS_SERVER.as_str()
+                            utils::proxy_list().await.unwrap()
                         ))
                         .form(&deletion_params)
                         .send()
@@ -195,7 +196,7 @@ async fn main() -> Result<(), GenericError> {
                 let response = match client
                     .post(format!(
                         "{}/database/getGJMessages20.php",
-                        BOOMLINGS_SERVER.as_str()
+                        utils::proxy_list().await.unwrap()
                     ))
                     .form(&params)
                     .send()
@@ -254,6 +255,7 @@ async fn main() -> Result<(), GenericError> {
             pending_challenges: TimedMap::new().into(),
             completed_challenges,
         })
+        .register("/", catchers!(catchers::catch_500, catchers::catch_401, catchers::catch_400, catchers::catch_404, catchers::catch_422))
         .mount(
             "/",
             routes![
