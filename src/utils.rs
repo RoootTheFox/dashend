@@ -67,6 +67,16 @@ pub async fn proxy_list() -> Result<String, GenericError> {
         let s: Servers = serde_json::from_str(&file).unwrap();
         let count = s.servers.len();
         let num = rand::thread_rng().gen_range(0..count);
+        let is_https = regex::Regex::new(r#"^(https://[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?)?$"#).unwrap();
+        let is_http = regex::Regex::new(r#"^(http://[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?)?$"#).unwrap();
+        if !s.servers[num].is_empty() && is_http.is_match(&s.servers[num].to_lowercase()) {
+            println!("match http")
+        } else if !s.servers[num].is_empty() && is_https.is_match(&s.servers[num].to_lowercase()) {
+            println!("match https")
+        } else {
+            println!("\x1b[0;31mInvalid URL in \"servers.json\" at position: {} ({})\x1b[0m", num, &s.servers[num])
+        }
+
         let s1 = &s.servers[num];
 
         s1.to_string()
