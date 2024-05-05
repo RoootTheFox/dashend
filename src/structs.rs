@@ -94,7 +94,7 @@ impl<'r, 'o: 'r> Responder<'r, 'o> for GenericError {
                 self.make_response(Status::InternalServerError)
             }
             GenericError::InvalidPronounsError => {
-                self.make_response_msg(Status::BadRequest, "Unacceptable Pronouns (If you think this is an error, contact RoootTheFox)".to_string())
+                self.make_response_msg(Status::BadRequest, "Unacceptable Pronouns (If you think this is an error, contact rooot)".to_string())
             }
             GenericError::InvalidWebsiteError => {
                 self.make_response_msg(Status::BadRequest, "Invalid URL (missing 'http(s)://' ?)".to_string())
