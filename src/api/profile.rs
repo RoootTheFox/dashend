@@ -1,3 +1,4 @@
+use crate::structs::ProfanityErrorType;
 use crate::structs::{ApiResponse, DBUser, GenericError, Profile};
 use crate::Db;
 use lazy_static::lazy_static;
@@ -62,12 +63,17 @@ pub async fn set_profile(
 
     // token verified, check data
     let pronouns = profile.pronouns.clone().unwrap_or("".to_string());
-    if pronouns != "" && !PRONOUNS_REGEX.is_match(&pronouns) {
+    /*if pronouns != "" && !PRONOUNS_REGEX.is_match(&pronouns) {
         eprintln!(
             "requested update with invalid pronouns: {} (does not match regex)",
             pronouns
         );
         return Err(GenericError::InvalidPronounsError);
+    }*/
+
+    // false positives: INAPPROPRIATE, PROFANE, MILD_OR_HIGHER
+    if pronouns.is(Type::SEVERE | Type::OFFENSIVE | Type::MEAN | Type::SEXUAL) {
+        return Err(GenericError::ProfanityError(ProfanityErrorType::Pronouns));
     }
 
     // check profanity
@@ -79,7 +85,7 @@ pub async fn set_profile(
                     "user {} tried to set a bio with SEVERE profanity: {}",
                     id, bio
                 );
-                return Err(GenericError::ProfanityError);
+                return Err(GenericError::ProfanityError(ProfanityErrorType::Bio));
             }
 
             let mut censor = Censor::from_str(bio);
@@ -93,7 +99,7 @@ pub async fn set_profile(
                     "user {} tried to set a bio with inappropriate content: {}",
                     id, bio
                 );
-                return Err(GenericError::ProfanityError);
+                return Err(GenericError::ProfanityError(ProfanityErrorType::Bio));
             }
         }
         None => {}
