@@ -41,11 +41,11 @@ pub enum GenericError {
     /*#[error("invalid pronouns")]
     InvalidPronounsError,*/
     #[error("profanity")]
-    ProfanityError,
+    ProfanityError(ProfanityErrorType),
 
     #[error("invalid website")]
     InvalidWebsiteError,
-    ProfanityError(ProfanityErrorType),
+    
 }
 
 #[derive(Debug, Copy, Clone)]
