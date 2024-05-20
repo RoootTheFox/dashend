@@ -38,14 +38,20 @@ pub enum GenericError {
     #[error("invalid digit")]
     ParseIntError(#[from] ParseIntError),
 
-    #[error("invalid pronouns")]
-    InvalidPronounsError,
-
+    /*#[error("invalid pronouns")]
+    InvalidPronounsError,*/
     #[error("profanity")]
     ProfanityError,
 
     #[error("invalid website")]
     InvalidWebsiteError,
+    ProfanityError(ProfanityErrorType),
+}
+
+#[derive(Debug, Copy, Clone)]
+pub enum ProfanityErrorType {
+    Bio,
+    Pronouns,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -111,12 +117,17 @@ impl<'r, 'o: 'r> Responder<'r, 'o> for GenericError {
                 }
                 _ => self.make_response(Status::InternalServerError),
             },
-            GenericError::ProfanityError => self.make_response_msg(
+            GenericError::ProfanityError(where_) => self.make_response_msg(
                 Status::BadRequest,
-                "The bio you tried to set contains <cr>profanity</c>.\n \
+                format!(
+                    "The {} you tried to set contains <cr>profanity</c>.\n \
                 Note that <cy>trying to avoid the filter</c> will result in a <cr>ban</c>.\n \
-                If you think this is a false-positive, please contact rooot."
-                    .to_string(),
+                If you think this is a false-positive, please contact rooot.",
+                    match where_ {
+                        ProfanityErrorType::Bio => "bio",
+                        ProfanityErrorType::Pronouns => "pronouns",
+                    }
+                ),
             ),
 
             
