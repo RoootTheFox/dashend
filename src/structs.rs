@@ -37,9 +37,7 @@ pub enum GenericError {
 
     #[error("invalid digit")]
     ParseIntError(#[from] ParseIntError),
-
-    /*#[error("invalid pronouns")]
-    InvalidPronounsError,*/
+    
     #[error("profanity")]
     ProfanityError(ProfanityErrorType),
 
@@ -98,9 +96,6 @@ impl<'r, 'o: 'r> Responder<'r, 'o> for GenericError {
         match self {
             GenericError::InvalidAuthenticationError => {
                 self.make_response(Status::InternalServerError)
-            }
-            GenericError::InvalidPronounsError => {
-                self.make_response_msg(Status::BadRequest, "Unacceptable Pronouns (If you think this is an error, contact rooot)".to_string())
             }
             GenericError::InvalidWebsiteError => {
                 self.make_response_msg(Status::BadRequest, "Invalid URL (missing 'http(s)://' ?)".to_string())

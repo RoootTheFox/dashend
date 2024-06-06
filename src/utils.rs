@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use rand::Rng;
 use serde::Deserialize;
+use ansi_term::Color::{Red, Yellow};
 
 use crate::{structs::{GDMessage, GenericError}, BOOMLINGS_SERVER};
 
@@ -60,14 +61,12 @@ pub fn parse_gj_messages_response(meow: String) -> Result<Vec<GDMessage>, Generi
 }
 
 pub fn valid_url_check(url: &str) -> bool {
-    let reg = regex::Regex::new(r#"^(http://www\.|https://www\.|http://|https://)?[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(/.*)?$"#).unwrap();
+    let reg = regex::Regex::new(r#"(?i)^(http://www\.|https://www\.|http://|https://)?[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(/.*)?$"#).unwrap();
 
-    if reg.is_match(&url.to_lowercase()) {
-        true
-    } else if reg.is_match(&url.to_lowercase()) {
+    if reg.is_match(&url) {
         true
     } else {
-        println!("\x1b[0;31mInvalid URL ({})\x1b[0m", url);
+        println!("{} {} ({})", Red.bold().paint("Invalid URL set in"), Yellow.bold().paint("\"servers.json\""), url);
         false
     }
 }
@@ -82,11 +81,11 @@ pub async fn proxy_list() -> Result<String, GenericError> {
         let num = rand::thread_rng().gen_range(0..count);
 
         if !s.servers[num].is_empty() && valid_url_check(&*s.servers[num]) {
+            let s1 = &s.servers[num];
+            s1.to_string()
+        } else {
+            BOOMLINGS_SERVER.to_string()
         }
-
-        let s1 = &s.servers[num];
-
-        s1.to_string()
     };
     Ok(srv)
 }
