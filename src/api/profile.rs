@@ -1,5 +1,6 @@
 use crate::structs::ProfanityErrorType;
 use crate::structs::{ApiResponse, DBUser, GenericError, Profile};
+use crate::utils::valid_url_check;
 use crate::Db;
 use lazy_static::lazy_static;
 use regex::Regex;
@@ -103,6 +104,11 @@ pub async fn set_profile(
             }
         }
         None => {}
+    }
+
+    let website = profile.website.clone().unwrap_or("".to_string());
+    if website != "" && !valid_url_check(&website) {
+        return Err(GenericError::InvalidWebsiteError);
     }
 
     sqlx::query_as!(

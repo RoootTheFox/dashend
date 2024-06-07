@@ -37,11 +37,13 @@ pub enum GenericError {
 
     #[error("invalid digit")]
     ParseIntError(#[from] ParseIntError),
-
-    /*#[error("invalid pronouns")]
-    InvalidPronounsError,*/
+    
     #[error("profanity")]
     ProfanityError(ProfanityErrorType),
+
+    #[error("invalid website")]
+    InvalidWebsiteError,
+    
 }
 
 #[derive(Debug, Copy, Clone)]
@@ -95,6 +97,9 @@ impl<'r, 'o: 'r> Responder<'r, 'o> for GenericError {
             GenericError::InvalidAuthenticationError => {
                 self.make_response(Status::InternalServerError)
             }
+            GenericError::InvalidWebsiteError => {
+                self.make_response_msg(Status::BadRequest, "Invalid URL (missing 'http(s)://' ?)".to_string())
+            }
             GenericError::UuidError(..) => {
                 self.make_response_msg(Status::BadRequest, "invalid uuid".to_string())
             }
@@ -119,6 +124,8 @@ impl<'r, 'o: 'r> Responder<'r, 'o> for GenericError {
                     }
                 ),
             ),
+
+            
 
             _ => Status::InternalServerError.respond_to(req),
         }
