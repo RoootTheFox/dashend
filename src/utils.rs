@@ -76,10 +76,13 @@ pub async fn proxy_list() -> Result<String, GenericError> {
         BOOMLINGS_SERVER.to_string()
     } else {
         let file = std::fs::read_to_string("servers.json")?;
-        let s: Servers = serde_json::from_str(&file).unwrap();
+        let s: Servers = serde_json::from_str(&file).unwrap_or(Servers { servers: vec![BOOMLINGS_SERVER.to_string()] });
         let count = s.servers.len();
-        let num = rand::thread_rng().gen_range(0..count);
-
+        let num = if count < 1 {
+            return Ok(BOOMLINGS_SERVER.to_string())
+        } else {
+            rand::thread_rng().gen_range(0..count)
+        };
         if !s.servers[num].is_empty() && valid_url_check(&*s.servers[num]) {
             let s1 = &s.servers[num];
             s1.to_string()
